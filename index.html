@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Vocab Study Tool</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the 3D flip card effect */
+        .card-container {
+            perspective: 1000px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-container.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .card-face-front {
+            background-color: white;
+            color: black;
+        }
+        .card-face-back {
+            background-color: #1f2937; /* gray-800 */
+            color: white;
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl min-h-screen flex flex-col">
+        
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Cybersecurity Study Tool</h1>
+            <p class="text-gray-600">Use the flashcards to learn, then test your knowledge!</p>
+        </header>
+
+        <!-- Mode Switcher -->
+        <div class="flex justify-center space-x-4 mb-6">
+            <button id="flashcard-mode-btn" class="px-6 py-2 rounded-lg font-semibold text-white bg-blue-600 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition">
+                Flashcards
+            </button>
+            <button id="test-mode-btn" class="px-6 py-2 rounded-lg font-semibold text-gray-700 bg-gray-200 shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 transition">
+                Test
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="content-area" class="flex-grow flex flex-col items-center">
+
+            <!-- Flashcard View -->
+            <div id="flashcard-view" class="w-full max-w-lg">
+                <!-- Card Container -->
+                <div id="flashcard-container" class="card-container w-full h-64 sm:h-80 mb-4 cursor-pointer" onclick="flipCard()">
+                    <div id="flashcard-inner" class="card-inner">
+                        <!-- Card Front (Term) -->
+                        <div class="card-face card-face-front">
+                            <span id="card-term" class="text-2xl sm:text-3xl font-semibold text-center"></span>
+                        </div>
+                        <!-- Card Back (Definition) -->
+                        <div class="card-face card-face-back">
+                            <span id="card-definition" class="text-base sm:text-lg text-center"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div id="card-progress" class="text-center text-gray-600 mb-4">Card 1 of 31</div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between">
+                    <button id="prev-card-btn" class="px-5 py-2 rounded-lg font-semibold text-white bg-gray-500 hover:bg-gray-600 transition">
+                        &larr; Previous
+                    </button>
+                    <button id="flip-card-btn" class="px-5 py-2 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition" onclick="flipCard()">
+                        Flip
+                    </button>
+                    <button id="next-card-btn" class="px-5 py-2 rounded-lg font-semibold text-white bg-gray-500 hover:bg-gray-600 transition">
+                        Next &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Test View -->
+            <div id="test-view" class="w-full max-w-2xl hidden">
+                <div id="test-question-area" class="bg-white p-6 rounded-lg shadow-lg">
+                    <div id="test-progress" class="text-sm text-gray-500 mb-2">Question 1 of 10</div>
+                    <div id="test-score" class="text-sm text-gray-500 mb-4">Score: 0</div>
+                    
+                    <!-- Question (Definition) -->
+                    <p class="text-lg font-medium text-gray-800 mb-6" id="test-question"></p>
+                    
+                    <!-- Answer Options (Terms) -->
+                    <div id="test-options" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Options will be dynamically inserted here -->
+                    </div>
+                    
+                    <!-- Feedback Message -->
+                    <div id="test-feedback" class="mt-6 text-center font-semibold"></div>
+                </div>
+
+                <!-- Test Results -->
+                <div id="test-results-area" class="bg-white p-6 rounded-lg shadow-lg text-center hidden">
+                    <h2 class="text-2xl font-bold mb-4">Test Complete!</h2>
+                    <p id="final-score" class="text-3xl font-semibold text-blue-600 mb-6"></p>
+                    <button id="restart-test-btn" class="px-6 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
+                        Restart Test
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const vocabData = [
+            { term: "Vulnerability", definition: "A weakness or flaw in a system, application, or process that could be exploited by a threat." },
+            { term: "Threat", definition: "Any potential danger that could exploit a vulnerability to damage or destroy an asset. This could be an attacker, a natural disaster, or an accident." },
+            { term: "Attack", definition: "An action taken by a threat (an adversary) to exploit a vulnerability." },
+            { term: "Software vulnerability", definition: "A specific weakness, flaw, or error in a piece of software code that can be exploited." },
+            { term: "Cyber threat", definition: "A threat that originates from the digital world, such as a hacker, malware, or a phishing attempt." },
+            { term: "Adversary", definition: "(Also called a 'Threat Actor') The person, group, or organization conducting an attack." },
+            { term: "Advanced Persistent Threat (APT)", definition: "A sophisticated, long-term, and targeted cyberattack, usually conducted by a well-funded group or nation-state, where the adversary remains hidden on the network for a long time." },
+            { term: "Cyber espionage", definition: "The act of using cyberattacks to steal secrets and classified information from governments, corporations, or other organizations." },
+            { term: "Threat modeling", definition: "A structured process for identifying potential threats to a system, quantifying their risks, and prioritizing countermeasures." },
+            { term: "Social engineering", definition: "A non-technical attack that relies on human interaction and psychological manipulation to trick people into giving up confidential information (like passwords) or performing an action." },
+            { term: "Sandboxed environment", definition: "An isolated, secure testing area on a computer used to run or open suspicious files and programs without letting them affect the main system." },
+            { term: "Kali Linux", definition: "A popular Linux distribution (operating system) specifically designed for penetration testing and digital forensics. It comes pre-loaded with hundreds of security tools." },
+            { term: "Security controls", definition: "Safeguards or countermeasures put in place to reduce risk to an acceptable level. They can be technical (like a firewall) or administrative (like a security policy)." },
+            { term: "Identification", definition: "The act of claiming an identity (e.g., 'My username is 'bob'')." },
+            { term: "Authentication", definition: "The act of *proving* that identity (e.g., 'Here is my password' or 'Here is my fingerprint')." },
+            { term: "Authorization", definition: "The permissions given to a proven identity (e.g., 'User 'bob' is *allowed* to read this file but not delete it')." },
+            { term: "Principle of least privilege", definition: "The security concept of giving a user or process only the minimum level of access (privileges) necessary to perform its job, and no more." },
+            { term: "Cryptography", definition: "The science and practice of secure communication, involving techniques to protect information from being read or modified by third parties." },
+            { term: "Encryption", definition: "The process of converting data from a readable format (plaintext) into an unreadable, scrambled format (ciphertext) using an algorithm and a key." },
+            { term: "Hash value", definition: "A unique, fixed-length string of text created by a mathematical algorithm (a hash function). It acts as a 'digital fingerprint' for a piece of data, commonly used to verify data integrity." },
+            { term: "Protection", definition: "Security measures designed to safeguard systems and data against threats and attacks." },
+            { term: "Prevention", definition: "Security controls designed to *stop* a security incident from happening in the first place (e.g., a firewall blocking a known malicious IP)." },
+            { term: "Detection", definition: "Security controls designed to *identify* that a security incident is happening or has already happened (e.g., an alarm from an Intrusion Detection System)." },
+            { term: "Response", definition: "The actions taken *during* a security incident to contain, eradicate, and mitigate the damage." },
+            { term: "Recovery", definition: "The actions taken *after* a security incident to restore systems and data to normal operation." },
+            { term: "Access control", definition: "The selective restriction of access to a resource. This is the system that enforces authorization." },
+            { term: "Network firewall", definition: "A security device (hardware or software) that monitors and filters incoming and outgoing network traffic based on an organization's security policies." },
+            { term: "Disaster recovery plan", definition: "A documented process or set of procedures to recover and protect a business's IT infrastructure in the event of a disaster." },
+            { term: "Incident response", definition: "An organized approach to addressing and managing the aftermath of a security breach or cyberattack." },
+            { term: "Risk", definition: "The potential for loss, damage, or destruction of an asset as a result of a threat exploiting a vulnerability." },
+            { term: "Risk management", definition: "The process of identifying, assessing, and prioritizing risks, followed by coordinated application of resources to minimize, monitor, and control the probability or impact of those risks." }
+        ];
+
+        // --- App State ---
+        let state = {
+            mode: 'flashcard', // 'flashcard' or 'test'
+            currentCardIndex: 0,
+            shuffledDeck: [],
+            testState: {
+                questions: [],
+                currentQuestionIndex: 0,
+                score: 0,
+                testLength: 10,
+                correctAnswer: ''
+            }
+        };
+
+        // --- DOM Elements ---
+        const flashcardModeBtn = document.getElementById('flashcard-mode-btn');
+        const testModeBtn = document.getElementById('test-mode-btn');
+        const flashcardView = document.getElementById('flashcard-view');
+        const testView = document.getElementById('test-view');
+
+        // Flashcard elements
+        const flashcardContainer = document.getElementById('flashcard-container');
+        const cardTerm = document.getElementById('card-term');
+        const cardDefinition = document.getElementById('card-definition');
+        const cardProgress = document.getElementById('card-progress');
+        const prevCardBtn = document.getElementById('prev-card-btn');
+        const nextCardBtn = document.getElementById('next-card-btn');
+
+        // Test elements
+        const testQuestionArea = document.getElementById('test-question-area');
+        const testProgress = document.getElementById('test-progress');
+        const testScore = document.getElementById('test-score');
+        const testQuestion = document.getElementById('test-question');
+        const testOptions = document.getElementById('test-options');
+        const testFeedback = document.getElementById('test-feedback');
+        const testResultsArea = document.getElementById('test-results-area');
+        const finalScore = document.getElementById('final-score');
+        const restartTestBtn = document.getElementById('restart-test-btn');
+
+        // --- Utility Functions ---
+        function shuffleArray(array) {
+            return [...array].sort(() => Math.random() - 0.5);
+        }
+
+        // --- Mode Switching ---
+        function setMode(newMode) {
+            state.mode = newMode;
+            if (newMode === 'flashcard') {
+                flashcardModeBtn.classList.replace('bg-gray-200', 'bg-blue-600');
+                flashcardModeBtn.classList.replace('text-gray-700', 'text-white');
+                testModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
+                testModeBtn.classList.replace('text-white', 'text-gray-700');
+                
+                flashcardView.classList.remove('hidden');
+                testView.classList.add('hidden');
+                
+                updateFlashcard();
+            } else { // 'test' mode
+                testModeBtn.classList.replace('bg-gray-200', 'bg-blue-600');
+                testModeBtn.classList.replace('text-gray-700', 'text-white');
+                flashcardModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
+                flashcardModeBtn.classList.replace('text-white', 'text-gray-700');
+
+                flashcardView.classList.add('hidden');
+                testView.classList.remove('hidden');
+                
+                startTest();
+            }
+        }
+
+        // --- Flashcard Logic ---
+        function flipCard() {
+            flashcardContainer.classList.toggle('is-flipped');
+        }
+
+        function updateFlashcard() {
+            const card = vocabData[state.currentCardIndex];
+            cardTerm.textContent = card.term;
+            cardDefinition.textContent = card.definition;
+            cardProgress.textContent = `Card ${state.currentCardIndex + 1} of ${vocabData.length}`;
+            
+            // Reset flip
+            flashcardContainer.classList.remove('is-flipped');
+        }
+
+        function nextCard() {
+            state.currentCardIndex = (state.currentCardIndex + 1) % vocabData.length;
+            updateFlashcard();
+        }
+
+        function prevCard() {
+            state.currentCardIndex = (state.currentCardIndex - 1 + vocabData.length) % vocabData.length;
+            updateFlashcard();
+        }
+
+        // --- Test Logic ---
+        function startTest() {
+            state.testState.currentQuestionIndex = 0;
+            state.testState.score = 0;
+            state.shuffledDeck = shuffleArray(vocabData);
+            state.testState.questions = state.shuffledDeck.slice(0, state.testState.testLength);
+            
+            testQuestionArea.classList.remove('hidden');
+            testResultsArea.classList.add('hidden');
+            
+            generateTestQuestion();
+        }
+
+        function generateTestQuestion() {
+            if (state.testState.currentQuestionIndex >= state.testState.testLength) {
+                showTestResults();
+                return;
+            }
+
+            // Update progress
+            testProgress.textContent = `Question ${state.testState.currentQuestionIndex + 1} of ${state.testState.testLength}`;
+            testScore.textContent = `Score: ${state.testState.score}`;
+            testFeedback.textContent = '';
+            
+            // Get correct answer
+            const correctEntry = state.testState.questions[state.testState.currentQuestionIndex];
+            state.testState.correctAnswer = correctEntry.term;
+            
+            // Set question
+            testQuestion.textContent = correctEntry.definition;
+            
+            // Get 3 wrong answers
+            let wrongAnswers = vocabData
+                .filter(entry => entry.term !== correctEntry.term)
+                .map(entry => entry.term);
+            wrongAnswers = shuffleArray(wrongAnswers).slice(0, 3);
+            
+            // Combine and shuffle options
+            const options = shuffleArray([correctEntry.term, ...wrongAnswers]);
+            
+            // Display options
+            testOptions.innerHTML = '';
+            options.forEach(term => {
+                const button = document.createElement('button');
+                button.textContent = term;
+                button.classList.add('w-full', 'p-4', 'rounded-lg', 'border', 'border-gray-300', 'text-gray-700', 'text-left', 'hover:bg-gray-100', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500', 'transition');
+                button.onclick = () => selectAnswer(term, button);
+                testOptions.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedTerm, button) {
+            const correct = selectedTerm === state.testState.correctAnswer;
+            
+            // Disable all buttons after selection
+            const buttons = testOptions.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (correct) {
+                state.testState.score++;
+                button.classList.add('bg-green-100', 'border-green-500', 'ring-green-500');
+                testFeedback.textContent = "Correct!";
+                testFeedback.classList.add('text-green-600');
+                testFeedback.classList.remove('text-red-600');
+            } else {
+                button.classList.add('bg-red-100', 'border-red-500', 'ring-red-500');
+                testFeedback.textContent = `Incorrect. The correct answer was: ${state.testState.correctAnswer}`;
+                testFeedback.classList.add('text-red-600');
+                testFeedback.classList.remove('text-green-600');
+                
+                // Highlight the correct answer
+                buttons.forEach(btn => {
+                    if (btn.textContent === state.testState.correctAnswer) {
+                        btn.classList.add('bg-green-100', 'border-green-500');
+                    }
+                });
+            }
+
+            state.testState.currentQuestionIndex++;
+            
+            // Load next question after a delay
+            setTimeout(() => {
+                generateTestQuestion();
+            }, 2000);
+        }
+
+        function showTestResults() {
+            testQuestionArea.classList.add('hidden');
+            testResultsArea.classList.remove('hidden');
+            finalScore.textContent = `Your score: ${state.testState.score} / ${state.testState.testLength}`;
+        }
+
+        // --- Initial Setup ---
+        function init() {
+            // Setup event listeners
+            flashcardModeBtn.addEventListener('click', () => setMode('flashcard'));
+            testModeBtn.addEventListener('click', () => setMode('test'));
+            
+            prevCardBtn.addEventListener('click', prevCard);
+            nextCardBtn.addEventListener('click', nextCard);
+            
+            restartTestBtn.addEventListener('click', startTest);
+            
+            // Set initial mode
+            setMode('flashcard');
+        }
+
+        // Run the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
