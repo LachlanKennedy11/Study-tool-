@@ -43,6 +43,38 @@
             color: white;
             transform: rotateY(180deg);
         }
+
+        /* Custom styles for the game */
+        .game-card {
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+            padding: 0.5rem;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 0.5rem; /* rounded-lg */
+            cursor: pointer;
+            height: 10rem; /* h-40 */
+            box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+        }
+        .game-card.covered {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: bold;
+        }
+        .game-card.revealed {
+            background-color: white;
+            color: #1f2937; /* gray-800 */
+        }
+        .game-card.matched {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+            cursor: default;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -61,6 +93,9 @@
             </button>
             <button id="test-mode-btn" class="px-6 py-2 rounded-lg font-semibold text-gray-700 bg-gray-200 shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 transition">
                 Test
+            </button>
+            <button id="game-mode-btn" class="px-6 py-2 rounded-lg font-semibold text-gray-700 bg-gray-200 shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 transition">
+                Game
             </button>
         </div>
 
@@ -109,30 +144,91 @@
             </div>
 
             <!-- Test View -->
-            <div id="test-view" class="w-full max-w-2xl hidden">
-                <div id="test-question-area" class="bg-white p-6 rounded-lg shadow-lg">
-                    <div id="test-progress" class="text-sm text-gray-500 mb-2">Question 1 of 10</div>
-                    <div id="test-score" class="text-sm text-gray-500 mb-4">Score: 0</div>
-                    
-                    <!-- Question (Definition) -->
-                    <p class="text-lg font-medium text-gray-800 mb-6" id="test-question"></p>
-                    
-                    <!-- Answer Options (Terms) -->
-                    <div id="test-options" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Options will be dynamically inserted here -->
+            <div id="test-view" class="w-full max-w-lg hidden">
+                <!-- Question Area -->
+                <div id="test-question-area" class="bg-white p-6 rounded-lg shadow-md">
+                    <!-- Test Header -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="test-progress" class="text-gray-600">Question 1 of 10</span>
+                        <span id="test-score" class="text-lg font-semibold text-blue-600">Score: 0</span>
                     </div>
-                    
-                    <!-- Feedback Message -->
-                    <div id="test-feedback" class="mt-6 text-center font-semibold"></div>
+                    <!-- Question -->
+                    <p id="test-question" class="text-lg font-semibold text-gray-800 mb-6 min-h-[6rem]">
+                        <!-- Question text goes here -->
+                    </p>
+                    <!-- Options -->
+                    <div id="test-options" class="space-y-3">
+                        <!-- Option buttons go here -->
+                    </div>
+                    <!-- Feedback -->
+                    <p id="test-feedback" class="mt-4 text-center font-semibold h-6">
+                        <!-- Feedback (Correct/Incorrect) goes here -->
+                    </p>
                 </div>
 
-                <!-- Test Results -->
-                <div id="test-results-area" class="bg-white p-6 rounded-lg shadow-lg text-center hidden">
-                    <h2 class="text-2xl font-bold mb-4">Test Complete!</h2>
-                    <p id="final-score" class="text-3xl font-semibold text-blue-600 mb-6"></p>
-                    <button id="restart-test-btn" class="px-6 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
+                <!-- Results Area -->
+                <div id="test-results-area" class="bg-white p-8 rounded-lg shadow-md text-center hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Test Complete!</h2>
+                    <p id="final-score" class="text-3xl font-semibold text-blue-600 mb-8">
+                        Your score: 0 / 10
+                    </p>
+                    <button id="restart-test-btn" class="w-full px-6 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
                         Restart Test
                     </button>
+                </div>
+            </div>
+
+            <!-- Game View -->
+            <div id="game-view" class="w-full max-w-lg hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Fill in the Blank</h2>
+                    <button id="new-game-btn" class="px-5 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition">
+                        New Game
+                    </button>
+                </div>
+
+                <!-- Game Area -->
+                <div id="fill-in-game-area" class="bg-white p-6 rounded-lg shadow-md">
+                    <!-- Game Header -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="game-progress" class="text-gray-600">Question 1 of 10</span>
+                        <span id="game-score" class="text-lg font-semibold text-blue-600">Score: 0</span>
+                    </div>
+                    <!-- Question (Definition) -->
+                    <p class="text-gray-700 mb-2">Definition:</p>
+                    <p id="game-definition" class="text-lg font-semibold text-gray-800 mb-6 min-h-[6rem]">
+                        <!-- Definition text goes here -->
+                    </p>
+                    
+                    <!-- Answer Input -->
+                    <div class="mb-4">
+                        <label for="game-answer-input" class="block text-sm font-medium text-gray-700 mb-1">What's the term?</label>
+                        <input type="text" id="game-answer-input" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="off">
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-2">
+                         <button id="game-submit-btn" class="flex-1 px-5 py-2 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition">
+                            Submit Answer
+                        </button>
+                        <button id="game-skip-btn" class="flex-1 px-5 py-2 rounded-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 transition">
+                            Skip
+                        </button>
+                    </div>
+
+                    <!-- Feedback -->
+                    <p id="game-feedback" class="mt-4 text-center font-semibold h-6">
+                        <!-- Feedback (Correct/Incorrect) goes here -->
+                    </p>
+                </div>
+
+                <!-- Game Results Area -->
+                <div id="game-results-area" class="bg-white p-8 rounded-lg shadow-md text-center hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Game Over!</h2>
+                    <p id="game-final-score" class="text-3xl font-semibold text-blue-600 mb-8">
+                        Your score: 0 / 10
+                    </p>
+                    <p class="text-gray-600 mb-6">Click "New Game" to play again.</p>
                 </div>
             </div>
 
@@ -185,14 +281,24 @@
                 score: 0,
                 testLength: 10,
                 correctAnswer: ''
+            },
+            fillInGame: {
+                questions: [],
+                currentGameIndex: 0,
+                score: 0,
+                gameLength: 10,
+                currentAnswer: '',
+                isChecking: false // To prevent multiple submissions
             }
         };
 
         // --- DOM Elements ---
         const flashcardModeBtn = document.getElementById('flashcard-mode-btn');
         const testModeBtn = document.getElementById('test-mode-btn');
+        const gameModeBtn = document.getElementById('game-mode-btn');
         const flashcardView = document.getElementById('flashcard-view');
         const testView = document.getElementById('test-view');
+        const gameView = document.getElementById('game-view');
 
         // Flashcard elements
         const flashcardContainer = document.getElementById('flashcard-container');
@@ -214,6 +320,19 @@
         const finalScore = document.getElementById('final-score');
         const restartTestBtn = document.getElementById('restart-test-btn');
 
+        // Game elements
+        const newGameBtn = document.getElementById('new-game-btn');
+        const fillInGameArea = document.getElementById('fill-in-game-area');
+        const gameProgress = document.getElementById('game-progress');
+        const gameScore = document.getElementById('game-score');
+        const gameDefinition = document.getElementById('game-definition');
+        const gameAnswerInput = document.getElementById('game-answer-input');
+        const gameSubmitBtn = document.getElementById('game-submit-btn');
+        const gameSkipBtn = document.getElementById('game-skip-btn');
+        const gameFeedback = document.getElementById('game-feedback');
+        const gameResultsArea = document.getElementById('game-results-area');
+        const gameFinalScore = document.getElementById('game-final-score');
+
         // --- Utility Functions ---
         function shuffleArray(array) {
             return [...array].sort(() => Math.random() - 0.5);
@@ -227,21 +346,40 @@
                 flashcardModeBtn.classList.replace('text-gray-700', 'text-white');
                 testModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
                 testModeBtn.classList.replace('text-white', 'text-gray-700');
+                gameModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
+                gameModeBtn.classList.replace('text-white', 'text-gray-700');
                 
                 flashcardView.classList.remove('hidden');
                 testView.classList.add('hidden');
+                gameView.classList.add('hidden');
                 
                 updateFlashcard();
-            } else { // 'test' mode
+            } else if (newMode === 'test') { // 'test' mode
                 testModeBtn.classList.replace('bg-gray-200', 'bg-blue-600');
                 testModeBtn.classList.replace('text-gray-700', 'text-white');
                 flashcardModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
                 flashcardModeBtn.classList.replace('text-white', 'text-gray-700');
+                gameModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
+                gameModeBtn.classList.replace('text-white', 'text-gray-700');
 
                 flashcardView.classList.add('hidden');
                 testView.classList.remove('hidden');
+                gameView.classList.add('hidden');
                 
                 startTest();
+            } else { // 'game' mode
+                gameModeBtn.classList.replace('bg-gray-200', 'bg-blue-600');
+                gameModeBtn.classList.replace('text-gray-700', 'text-white');
+                flashcardModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
+                flashcardModeBtn.classList.replace('text-white', 'text-gray-700');
+                testModeBtn.classList.replace('bg-blue-600', 'bg-gray-200');
+                testModeBtn.classList.replace('text-white', 'text-gray-700');
+
+                flashcardView.classList.add('hidden');
+                testView.classList.add('hidden');
+                gameView.classList.remove('hidden');
+                
+                startFillInGame();
             }
         }
 
@@ -370,17 +508,137 @@
             finalScore.textContent = `Your score: ${state.testState.score} / ${state.testState.testLength}`;
         }
 
+        // --- Game Logic ---
+        function startFillInGame() {
+            const { fillInGame } = state;
+            fillInGame.currentGameIndex = 0;
+            fillInGame.score = 0;
+            fillInGame.isChecking = false;
+            
+            // Shuffle and get questions
+            const shuffledDeck = shuffleArray(vocabData);
+            fillInGame.questions = shuffledDeck.slice(0, fillInGame.gameLength);
+            
+            // Show game, hide results
+            fillInGameArea.classList.remove('hidden');
+            gameResultsArea.classList.add('hidden');
+            gameFeedback.textContent = '';
+            
+            loadFillInQuestion();
+        }
+
+        function loadFillInQuestion() {
+            const { fillInGame } = state;
+
+            if (fillInGame.currentGameIndex >= fillInGame.gameLength) {
+                showFillInResults();
+                return;
+            }
+
+            // Enable buttons and clear input
+            gameAnswerInput.value = '';
+            gameAnswerInput.disabled = false;
+            gameSubmitBtn.disabled = false;
+            gameSkipBtn.disabled = false;
+            gameFeedback.textContent = '';
+            fillInGame.isChecking = false;
+
+            // Update progress
+            gameProgress.textContent = `Question ${fillInGame.currentGameIndex + 1} of ${fillInGame.gameLength}`;
+            gameScore.textContent = `Score: ${fillInGame.score}`;
+            
+            // Get and set question
+            const currentQuestion = fillInGame.questions[fillInGame.currentGameIndex];
+            fillInGame.currentAnswer = currentQuestion.term;
+            gameDefinition.textContent = currentQuestion.definition;
+            
+            gameAnswerInput.focus();
+        }
+
+        function checkFillInAnswer() {
+            const { fillInGame } = state;
+            if (fillInGame.isChecking) return; // Prevent double submit
+            
+            fillInGame.isChecking = true;
+            gameAnswerInput.disabled = true;
+            gameSubmitBtn.disabled = true;
+            gameSkipBtn.disabled = true;
+
+            const userAnswer = gameAnswerInput.value.trim();
+            const correctAnswer = fillInGame.currentAnswer;
+
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                // Correct
+                fillInGame.score++;
+                gameFeedback.textContent = "Correct!";
+                gameFeedback.classList.add('text-green-600');
+                gameFeedback.classList.remove('text-red-600');
+            } else {
+                // Incorrect
+                gameFeedback.textContent = `Incorrect. The answer was: ${correctAnswer}`;
+                gameFeedback.classList.add('text-red-600');
+                gameFeedback.classList.remove('text-green-600');
+            }
+
+            fillInGame.currentGameIndex++;
+            
+            // Load next question after a delay
+            setTimeout(() => {
+                loadFillInQuestion();
+            }, 2000);
+        }
+
+        function skipFillInQuestion() {
+             const { fillInGame } = state;
+            if (fillInGame.isChecking) return;
+            
+            fillInGame.isChecking = true;
+            gameAnswerInput.disabled = true;
+            gameSubmitBtn.disabled = true;
+            gameSkipBtn.disabled = true;
+
+            gameFeedback.textContent = `The answer was: ${fillInGame.currentAnswer}`;
+            gameFeedback.classList.add('text-red-600');
+            gameFeedback.classList.remove('text-green-600');
+
+            fillInGame.currentGameIndex++;
+            
+            // Load next question after a delay
+            setTimeout(() => {
+                loadFillInQuestion();
+            }, 2000);
+        }
+
+        function showFillInResults() {
+            fillInGameArea.classList.add('hidden');
+            gameResultsArea.classList.remove('hidden');
+            gameFinalScore.textContent = `Your score: ${state.fillInGame.score} / ${state.fillInGame.gameLength}`;
+        }
+
+
         // --- Initial Setup ---
         function init() {
             // Setup event listeners
             flashcardModeBtn.addEventListener('click', () => setMode('flashcard'));
             testModeBtn.addEventListener('click', () => setMode('test'));
+            gameModeBtn.addEventListener('click', () => setMode('game'));
             
             prevCardBtn.addEventListener('click', prevCard);
             nextCardBtn.addEventListener('click', nextCard);
             startWithDefinitionToggle.addEventListener('change', updateFlashcard);
             
             restartTestBtn.addEventListener('click', startTest);
+            newGameBtn.addEventListener('click', startFillInGame);
+            
+            // NEW Listeners for fill-in-game
+            gameSubmitBtn.addEventListener('click', checkFillInAnswer);
+            gameSkipBtn.addEventListener('click', skipFillInQuestion);
+            gameAnswerInput.addEventListener('keyup', (event) => {
+                // Check for 'Enter' key
+                if (event.key === 'Enter') {
+                    checkFillInAnswer();
+                }
+            });
             
             // Set initial mode
             setMode('flashcard');
@@ -391,5 +649,6 @@
     </script>
 </body>
 </html>
+
 
 
