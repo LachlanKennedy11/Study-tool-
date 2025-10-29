@@ -86,6 +86,14 @@
                 <!-- Progress Indicator -->
                 <div id="card-progress" class="text-center text-gray-600 mb-4">Card 1 of 31</div>
 
+                <!-- Start with Definition Toggle -->
+                <div class="flex items-center justify-center mb-4">
+                    <input type="checkbox" id="start-with-definition-toggle" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="start-with-definition-toggle" class="ml-2 block text-sm text-gray-700">
+                        Start with Definition
+                    </label>
+                </div>
+
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
                     <button id="prev-card-btn" class="px-5 py-2 rounded-lg font-semibold text-white bg-gray-500 hover:bg-gray-600 transition">
@@ -193,6 +201,7 @@
         const cardProgress = document.getElementById('card-progress');
         const prevCardBtn = document.getElementById('prev-card-btn');
         const nextCardBtn = document.getElementById('next-card-btn');
+        const startWithDefinitionToggle = document.getElementById('start-with-definition-toggle');
 
         // Test elements
         const testQuestionArea = document.getElementById('test-question-area');
@@ -243,8 +252,16 @@
 
         function updateFlashcard() {
             const card = vocabData[state.currentCardIndex];
-            cardTerm.textContent = card.term;
-            cardDefinition.textContent = card.definition;
+            const showDefinitionFirst = startWithDefinitionToggle.checked;
+
+            if (showDefinitionFirst) {
+                cardTerm.textContent = card.definition;
+                cardDefinition.textContent = card.term;
+            } else {
+                cardTerm.textContent = card.term;
+                cardDefinition.textContent = card.definition;
+            }
+            
             cardProgress.textContent = `Card ${state.currentCardIndex + 1} of ${vocabData.length}`;
             
             // Reset flip
@@ -361,6 +378,7 @@
             
             prevCardBtn.addEventListener('click', prevCard);
             nextCardBtn.addEventListener('click', nextCard);
+            startWithDefinitionToggle.addEventListener('change', updateFlashcard);
             
             restartTestBtn.addEventListener('click', startTest);
             
@@ -373,4 +391,5 @@
     </script>
 </body>
 </html>
+
 
